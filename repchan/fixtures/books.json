@@ -1,0 +1,279 @@
+[
+    {
+        "pk": 5,
+        "model": "repchantest.authoralias",
+        "fields": {
+            "version_have_children": false,
+            "version_hash": "' '",
+            "name": "Alvin",
+            "version_in_trash": false,
+            "version_parent_rev_pk": null,
+            "version_date": null,
+            "version_parent_pk": null
+        }
+    },
+    {
+        "pk": 6,
+        "model": "repchantest.authoralias",
+        "fields": {
+            "version_have_children": false,
+            "version_hash": "'fd'",
+            "name": "Miki",
+            "version_in_trash": false,
+            "version_parent_rev_pk": null,
+            "version_date": null,
+            "version_parent_pk": null
+        }
+    },
+    {
+        "pk": 15,
+        "model": "repchantest.authoralias",
+        "fields": {
+            "version_have_children": false,
+            "version_hash": "",
+            "name": "qaws",
+            "version_in_trash": false,
+            "version_parent_rev_pk": null,
+            "version_date": "2012-09-10T11:07:00.374Z",
+            "version_parent_pk": null
+        }
+    },
+    {
+        "pk": 18,
+        "model": "repchantest.authoralias",
+        "fields": {
+            "version_have_children": false,
+            "version_hash": "",
+            "name": "www",
+            "version_in_trash": false,
+            "version_parent_rev_pk": null,
+            "version_date": "2012-09-10T13:05:30.982Z",
+            "version_parent_pk": null
+        }
+    },
+    {
+        "pk": 5,
+        "model": "repchantest.author",
+        "fields": {
+            "author_alias": 5,
+            "surname": "Boolowski",
+            "name": "Ryszard"
+        }
+    },
+    {
+        "pk": 6,
+        "model": "repchantest.author",
+        "fields": {
+            "author_alias": null,
+            "surname": "Barbarian",
+            "name": "Wladimir"
+        }
+    },
+    {
+        "pk": 7,
+        "model": "repchantest.author",
+        "fields": {
+            "author_alias": 6,
+            "surname": "Stallone",
+            "name": "Tom"
+        }
+    },
+    {
+        "pk": 8,
+        "model": "repchantest.author",
+        "fields": {
+            "author_alias": null,
+            "surname": "1234",
+            "name": "qaws"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "repchantest.section",
+        "fields": {
+            "version_have_children": false,
+            "version_hash": "",
+            "name": "Ascent",
+            "version_in_trash": false,
+            "version_parent_rev_pk": null,
+            "version_date": null,
+            "version_parent_pk": null
+        }
+    },
+    {
+        "pk": 2,
+        "model": "repchantest.section",
+        "fields": {
+            "version_have_children": false,
+            "version_hash": "",
+            "name": "Fall down",
+            "version_in_trash": false,
+            "version_parent_rev_pk": null,
+            "version_date": null,
+            "version_parent_pk": null
+        }
+    },
+    {
+        "pk": 3,
+        "model": "repchantest.section",
+        "fields": {
+            "version_have_children": false,
+            "version_hash": "",
+            "name": "Below the sky",
+            "version_in_trash": false,
+            "version_parent_rev_pk": null,
+            "version_date": null,
+            "version_parent_pk": null
+        }
+    },
+    {
+        "pk": 4,
+        "model": "repchantest.section",
+        "fields": {
+            "version_have_children": false,
+            "version_hash": "",
+            "name": "Ascent",
+            "version_in_trash": false,
+            "version_parent_rev_pk": null,
+            "version_date": "2012-09-08T22:20:44.997Z",
+            "version_parent_pk": 1
+        }
+    },
+    {
+        "pk": 5,
+        "model": "repchantest.section",
+        "fields": {
+            "version_have_children": false,
+            "version_hash": "",
+            "name": "Fall down",
+            "version_in_trash": false,
+            "version_parent_rev_pk": null,
+            "version_date": "2012-09-08T22:21:36.701Z",
+            "version_parent_pk": 2
+        }
+    },
+    {
+        "pk": 1,
+        "model": "repchantest.chapter",
+        "fields": {
+            "name": "The first step"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "repchantest.chapter",
+        "fields": {
+            "name": "The second step"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "repchantest.chapter",
+        "fields": {
+            "name": "The third step"
+        }
+    },
+    {
+        "pk": 4,
+        "model": "repchantest.chapter",
+        "fields": {
+            "name": "The last from four"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "repchantest.book",
+        "fields": {
+            "version_have_children": false,
+            "version_hash": "",
+            "log": null,
+            "title": "Handbook lost tourist",
+            "version_in_trash": false,
+            "author": 6,
+            "version_parent_rev_pk": null,
+            "version_date": null,
+            "version_parent_pk": null
+        }
+    },
+    {
+        "pk": 2,
+        "model": "repchantest.book",
+        "fields": {
+            "version_have_children": false,
+            "version_hash": "",
+            "log": null,
+            "title": "Two cats",
+            "version_in_trash": false,
+            "author": 7,
+            "version_parent_rev_pk": null,
+            "version_date": null,
+            "version_parent_pk": null
+        }
+    },
+    {
+        "pk": 3,
+        "model": "repchantest.book",
+        "fields": {
+            "version_have_children": false,
+            "version_hash": "",
+            "log": null,
+            "title": "Three hares",
+            "version_in_trash": false,
+            "author": 7,
+            "version_parent_rev_pk": null,
+            "version_date": null,
+            "version_parent_pk": null
+        }
+    },
+    {
+        "pk": 4,
+        "model": "repchantest.book",
+        "fields": {
+            "version_have_children": false,
+            "version_hash": "",
+            "log": null,
+            "title": "One turtle",
+            "version_in_trash": false,
+            "author": 7,
+            "version_parent_rev_pk": null,
+            "version_date": null,
+            "version_parent_pk": null
+        }
+    },
+    {
+        "pk": 2,
+        "model": "repchantest.page",
+        "fields": {
+            "version_have_children": false,
+            "chapter": 1,
+            "version_hash": "",
+            "version_in_trash": false,
+            "section": 1,
+            "book": 4,
+            "page_number": 2,
+            "version_parent_rev_pk": null,
+            "version_date": null,
+            "version_parent_pk": null,
+            "notes": "BBBBB BBB BB",
+            "contents": "bbbbbb bbbbb bbbb b"
+        }
+    },
+    {
+        "pk": 4,
+        "model": "repchantest.page",
+        "fields": {
+            "version_have_children": false,
+            "chapter": 1,
+            "version_hash": "",
+            "version_in_trash": false,
+            "section": 1,
+            "book": 4,
+            "page_number": 1,
+            "version_parent_rev_pk": null,
+            "version_date": null,
+            "version_parent_pk": null,
+            "notes": "AAAAAAAA AAA A",
+            "contents": "aaaaaaaa aaaaa aaaa aa"
+        }
+    }
+]
