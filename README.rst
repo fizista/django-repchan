@@ -25,7 +25,7 @@ Other similar projects:
 
 Truth table, access to the attributes of the context. 
 
-+============+==========+==============+
++------------+----------+--------------+
 | main       | revision | revision new |
 +============+==========+==============+
 | Read/Write | Read     | Read/Write   |
@@ -37,7 +37,7 @@ Truth table, access to the attributes of the context.
 
 Truth table attributes in the context.
 
-+=======================+===============+====================+====================+
++-----------------------+---------------+--------------------+--------------------+
 |                       | main          | rev                | rev new            |
 +=======================+===============+====================+====================+
 | version_parent_pk     | None          | pk main            | pk main            |
@@ -58,7 +58,7 @@ Truth table attributes in the context.
 
 Truth table commands in context.
 
-+=====================+=========================+=========================+==============================+
++---------------------+-------------------------+-------------------------+------------------------------+
 | self                | main                    | rev                     | rev new                      |
 +=====================+=========================+=========================+==============================+
 | create_revision     | copy self to rev new    | copy self to rev new    | raise  VersionRevision\      |
