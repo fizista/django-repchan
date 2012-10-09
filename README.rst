@@ -20,16 +20,19 @@ django-repchan
 ==============
 
 Truth table, access to the attributes of the context. 
+
 +============+==========+==============+
 | main       | revision | revision new |
 +============+==========+==============+
 | Read/Write | Read     | Read/Write   |
 +------------+----------+--------------+
+
  If you try to write to a variable when it is a 'read only', 
  an exception is thrown VersionReadOnlyException.
 
 
 Truth table attributes in the context.
+
 +=======================+===============+====================+====================+
 |                       | main          | rev                | rev new            |
 +=======================+===============+====================+====================+
@@ -50,6 +53,7 @@ Truth table attributes in the context.
 
 
 Truth table commands in context.
+
 +=====================+=========================+=========================+==============================+
 | self                | main                    | rev                     | rev new                      |
 +=====================+=========================+=========================+==============================+
