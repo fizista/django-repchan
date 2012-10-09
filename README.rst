@@ -1,3 +1,7 @@
+==============
+django-repchan
+==============
+
 =====
 About
 =====
@@ -5,19 +9,19 @@ About
 Library for versioning of data from django models.
 
 Conceptual design for the library:
-- Easy implementation to the current models
-- Must work with South migrations
-- Transparent in action for the the standard features of the Django framework
-- The logical structure of the database must be unaffected
+
+* Easy implementation to the current models
+* Must work with South migrations
+* Transparent in action for the the standard features of the Django framework
+* The logical structure of the database must be unaffected
 
 Other similar projects:
-- django-simple-history [`source <https://bitbucket.org/q/django-simple-history/src>`_]
-- django-reversion [`source <https://github.com/etianen/django-reversion.git>`_]
-- django-revisions [`source <https://github.com/stdbrouw/django-revisions>_`, `docs <http://stdbrouw.github.com/django-revisions/>_`]
+
+* django-simple-history [`source <https://bitbucket.org/q/django-simple-history/src>`_]
+* django-reversion [`source <https://github.com/etianen/django-reversion.git>`_]
+* django-revisions [`source <https://github.com/stdbrouw/django-revisions>`_, `docs <http://stdbrouw.github.com/django-revisions/>`_]
 
 
-django-repchan
-==============
 
 Truth table, access to the attributes of the context. 
 
