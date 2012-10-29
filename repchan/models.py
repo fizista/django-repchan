@@ -521,6 +521,10 @@ class VersionModel(models.Model):
 
         # removed from the database or move to trash
         if self.version_in_trash or hard:
+            # without sending signals post_delete, pre_delete
+            self._delete(using=None, *args, **kwargs)
+        elif hard:
+            # with sending signals
             signal_allow(self, models.signals.pre_delete)
             signal_allow(self, models.signals.post_delete)
 
@@ -529,6 +533,7 @@ class VersionModel(models.Model):
             signal_allow(self, models.signals.pre_delete, count=0)
             signal_allow(self, models.signals.post_delete, count=0)
         else:
+            # with sending "virtual" signals
             using = using or router.db_for_write(self.__class__, instance=self)
             assert self._get_pk_val() is not None, \
                     "%s object can't be deleted because its %s attribute is set to None." % \
