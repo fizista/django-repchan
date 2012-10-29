@@ -7,31 +7,42 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import utc
 from django.db.models import F
-import django.dispatch
+from django.db import router
+from django.db.models.deletion import Collector
 
 from repchan.managers import VersionManager, RawManager, DefaultManager
+from repchan.signals import revision_post_commit, revision_post_create, \
+                            revision_set_as_main, signal_send_on, \
+                            signal_send_off, signal_send_mask, signal_allow
 
-# Signls
-revision_post_commit = django.dispatch.Signal()
-revision_post_create = django.dispatch.Signal()
-revision_set_as_main = django.dispatch.Signal()
 
-NULL_DATE = datetime.datetime(1987, 10, 1).replace(tzinfo=utc)
+NULL_DATE = datetime.datetime(1991, 12, 21).replace(tzinfo=utc)
+
+# enable masking signal
+signal_send_mask(models.signals.pre_save)
+signal_send_mask(models.signals.post_save)
+
+signal_send_mask(models.signals.pre_delete)
+signal_send_mask(models.signals.post_delete)
+
+
 
 class Value(object):
 
-    def data_from_main_to_revision(obj_main, obj_revision, field_name):
+    def data_from_main_to_revision(self, obj_main, obj_revision, field_name):
         raise NotImplementedError('data_from_main_to_revision')
 
-    def data_from_revision_to_main(obj_revision, obj_main, field_name):
+    def data_from_revision_to_main(self, obj_revision, obj_main, field_name):
         raise NotImplementedError('data_from_revision_to_main')
 
-    def data_from_revision_to_revision(obj_revision_from, obj_revision_to,
-                                           field_name):
+    def data_from_revision_to_revision(self, obj_revision_from,
+                                            obj_revision_to, field_name):
         raise NotImplementedError('data_from_revision_to_revision')
 
 
-class ValueStandardException(Exception): pass
+class ValueStandardException(Exception):
+    pass
+
 
 class ValueStandard(Value):
     '''
@@ -145,7 +156,8 @@ class VersionModelBase(models.base.ModelBase):
                         if field_name in fields_names:
                             return True
                 return False
-            return False
+            else:
+                return False
 
         def get_primary_key_field():
             '''
@@ -362,8 +374,7 @@ class VersionModel(models.Model):
         '''
         Return list all versions for this property.
         '''
-        raise NotImplementedError('get_revisions')
-        return []
+        return self.objects_version.get_all_revisions_for(self)
 
     def get_revisions_tree(self):
         '''
@@ -452,7 +463,7 @@ class VersionModel(models.Model):
         main_version.version_unique_on = False
         main_version._save()
 
-        revision_set_as_main.send(sender=self)
+        revision_set_as_main.send(sender=self.__class__, instance=self)
 
     def check_is_main_version(self):
         '''
@@ -485,8 +496,7 @@ class VersionModel(models.Model):
         '''
         Generated hash of the current object.
         '''
-        keys = self._get_fieds_without_outside_changes()
-        keys.sort()
+        keys = sorted(self._get_fieds_without_outside_changes())
         data = '=='.join([str(getattr(self, k)) for k in keys])
         return hashlib.sha512(data).hexdigest()[:self.Versioning.hash_len]
 
@@ -498,7 +508,7 @@ class VersionModel(models.Model):
             self.version_in_trash = False
             self._save()
 
-    def delete(self, hard=False, *args, **kwargs):
+    def delete(self, hard=False, using=None, *args, **kwargs):
         if self.check_is_revision():
             raise VersionDisabledMethodException(
                                   'The method can not be started from '
@@ -508,11 +518,51 @@ class VersionModel(models.Model):
             raise VersionDisabledMethodException(
                                   'The method can not be started from '
                                   'the object of type "revision new".')
+
+        # removed from the database or move to trash
         if self.version_in_trash or hard:
-            super(VersionModel, self).delete(*args, **kwargs)
+            signal_allow(self, models.signals.pre_delete)
+            signal_allow(self, models.signals.post_delete)
+
+            self._delete(using=None, *args, **kwargs)
+
+            signal_allow(self, models.signals.pre_delete, count=0)
+            signal_allow(self, models.signals.post_delete, count=0)
         else:
+            using = using or router.db_for_write(self.__class__, instance=self)
+            assert self._get_pk_val() is not None, \
+                    "%s object can't be deleted because its %s attribute is set to None." % \
+                    (self._meta.object_name, self._meta.pk.attname)
+
+            collector = Collector(using=using)
+            collector.collect([self])
+
+            # send pre_delete signals
+            for model, obj in collector.instances_with_model():
+                if not model._meta.auto_created:
+                    models.signals.pre_delete.send(
+                        sender=model, instance=obj, using=using
+                    )
+
             self.version_in_trash = True
             self._save()
+
+            # send post_delete signals
+            for model, obj in collector.instances_with_model():
+                if not model._meta.auto_created:
+                    models.signals.post_delete.send(
+                        sender=model, instance=obj, using=using
+                    )
+
+    def _delete(self, using=None, *args, **kwargs):
+        signal_send_off(self, models.signals.pre_delete)
+        signal_send_off(self, models.signals.post_delete)
+
+        super(VersionModel, self).delete(using=None, *args, **kwargs)
+
+        signal_send_on(self, models.signals.pre_delete)
+        signal_send_on(self, models.signals.post_delete)
+
 
     def _get_fieds_without_outside_changes(self):
         keys_original = self._get_fields_original_fields_names()
@@ -618,6 +668,23 @@ class VersionModel(models.Model):
                                                 name,))
         super(VersionModel, self).__setattr__(name, value)
 
+    def __delattr__(self, name):
+        '''
+        The implementation of access control attributes.
+        
+        [context - acces rights]
+        main - Read/Write
+        revision - Read
+        revision - Read/Write
+        '''
+        fields = self._get_fields_original_fields_names()
+        if (name in fields) and self.check_is_revision():
+            if not "django/db/" in inspect.stack()[1][1]:
+                raise VersionReadOnlyException('Varible "%s.%s" is read only' %
+                                               (self.__class__.__name__,
+                                                name,))
+        super(VersionModel, self).__delattr__(name)
+
     def create_revision(self):
         '''
         Creates next revision of the current object.
@@ -669,7 +736,7 @@ class VersionModel(models.Model):
 
         new_revision._save()
 
-        revision_post_create.send(sender=self)
+        revision_post_create.send(sender=self.__class__, instance=self)
 
         return new_revision
 
@@ -696,9 +763,9 @@ class VersionModel(models.Model):
             rev_old.version_have_children = True
             rev_old._save()
 
-        revision_post_commit.send(sender=self)
+        revision_post_commit.send(sender=self.__class__, instance=self)
 
-    def save(self, *args, **kwargs):
+    def save(self, force_insert=False, force_update=False, using=None):
         # Check if this is the main version
         if self.check_is_revision():
             raise VersionDisabledMethodException(
@@ -709,15 +776,31 @@ class VersionModel(models.Model):
             raise VersionDisabledMethodException(
                                   'The method can not be started from '
                                   'the object of type "revision new".')
-        self._save()
+
+
+        signal_allow(self, models.signals.pre_save)
+        signal_allow(self, models.signals.post_save)
+
+        self._save(force_insert=False, force_update=False, using=None)
+
+        signal_allow(self, models.signals.pre_save, count=0)
+        signal_allow(self, models.signals.post_save, count=0)
+
         #print dir(self)
         new_revision = self.create_revision()
         #print dir(new_revision)
         new_revision.commit()
         new_revision.set_as_main_version()
 
+
     def _save(self, *args, **kwargs):
+        signal_send_off(self, models.signals.pre_save)
+        signal_send_off(self, models.signals.post_save)
+
         super(VersionModel, self).save(*args, **kwargs)
+
+        signal_send_on(self, models.signals.pre_save)
+        signal_send_on(self, models.signals.post_save)
 
     class Meta:
         abstract = True
