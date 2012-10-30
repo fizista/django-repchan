@@ -21,6 +21,9 @@ Other similar projects:
 * django-reversion [`source <https://github.com/etianen/django-reversion.git>`_]
 * django-revisions [`source <https://github.com/stdbrouw/django-revisions>`_, `docs <http://stdbrouw.github.com/django-revisions/>`_]
 
+============
+Installation
+============
 
 
 Truth table, access to the attributes of the context. 

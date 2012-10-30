@@ -690,7 +690,7 @@ class VersionModel(models.Model):
                                                 name,))
         super(VersionModel, self).__delattr__(name)
 
-    def create_revision(self):
+    def create_revision(self, using=None):
         '''
         Creates next revision of the current object.
         
@@ -741,11 +741,13 @@ class VersionModel(models.Model):
 
         new_revision._save()
 
-        revision_post_create.send(sender=self.__class__, instance=self)
+        using = using or router.db_for_write(self.__class__, instance=self)
+        revision_post_create.send(sender=self.__class__, instance=self,
+                                  using=using)
 
         return new_revision
 
-    def commit(self):
+    def commit(self, using=None):
         '''
         Commit new revision
         '''
@@ -768,7 +770,9 @@ class VersionModel(models.Model):
             rev_old.version_have_children = True
             rev_old._save()
 
-        revision_post_commit.send(sender=self.__class__, instance=self)
+        using = using or router.db_for_write(self.__class__, instance=self)
+        revision_post_commit.send(sender=self.__class__, instance=self,
+                                  using=using)
 
     def save(self, force_insert=False, force_update=False, using=None):
         # Check if this is the main version

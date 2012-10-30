@@ -3,3 +3,4 @@ TODO:
 * add function for remove orphaned revisions
 * add delete revisions
 * signals unittest
+* code testing on multiple databases

@@ -87,7 +87,7 @@ def signal_send_mask(signal_object):
 
 
 # Signls
-revision_post_commit = Signal(providing_args=["instance"])
-revision_post_create = Signal(providing_args=["instance"])
-revision_set_as_main = Signal(providing_args=["instance"])
+revision_post_commit = Signal(providing_args=["instance", "using"])
+revision_post_create = Signal(providing_args=["instance", "using"])
+revision_set_as_main = Signal(providing_args=["instance", "using"])
 
