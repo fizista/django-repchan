@@ -777,18 +777,24 @@ class VersionModel(models.Model):
                                   'The method can not be started from '
                                   'the object of type "revision new".')
 
+        # If no changes, then we drop writing.
+        if self.version_parent_rev_pk:
+            if self.get_version_hash() == self.version_parent_rev_pk.\
+                                                version_hash:
+                return
 
+        # Permission to send a signal.
         signal_allow(self, models.signals.pre_save)
         signal_allow(self, models.signals.post_save)
 
-        self._save(force_insert=False, force_update=False, using=None)
+        self._save(force_insert, force_update, using)
 
+        # Withdrawal of permission to send a signal.
         signal_allow(self, models.signals.pre_save, count=0)
         signal_allow(self, models.signals.post_save, count=0)
 
-        #print dir(self)
         new_revision = self.create_revision()
-        #print dir(new_revision)
+
         new_revision.commit()
         new_revision.set_as_main_version()
 

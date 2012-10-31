@@ -188,7 +188,7 @@ Truth table commands in context.
 | get_current_revision | return main revision    | raise VersionDisabled\  | raise VersionDisabled\       |
 |                      |                         | MethodException         | MethodException              |
 +----------------------+-------------------------+-------------------------+------------------------------+
-|                      |                         |                         |                              |
+| compare_current_to   | compare self == rev     | compare                 |                              |
 +----------------------+-------------------------+-------------------------+------------------------------+
 |                      |                         |                         |                              |
 +----------------------+-------------------------+-------------------------+------------------------------+
