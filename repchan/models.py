@@ -462,6 +462,8 @@ class VersionModel(models.Model):
 
         revision_set_as_main.send(sender=self.__class__, instance=self)
 
+        return main_version
+
     def check_is_main_version(self):
         '''
         Check if this is the main version.

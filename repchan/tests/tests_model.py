@@ -442,6 +442,7 @@ class TestModelVersions(TestModelBase):
         note2_rev1_2 = self.notebook_generator_rev(ipp(), note2_main, note_rev1)
 
         # check to see if there are revisions from one object
+        # 
         self.assertEqual(
                          list(note_main.get_revisions().order_by('pk').values_list('pk')),
                          [(note_rev1.pk,),

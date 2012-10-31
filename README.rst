@@ -99,8 +99,20 @@ Usage
    >>> n = Notebook(note='abc',number=1,alias='ABC')
    >>> n.get_revisions()
    []
+   >>> n.save() # Automatically created the first revision
+   >>> n.get_revisions()
+   [<Notebook: abc[1]>]
+   >>> n.note = 'abc rev1'
+   >>> n.save()
+   >>> n.get_revisions() 
+   [<Notebook: abc rev1[1]>, <Notebook: abc[1]>]
+   >>> n = n.get_revisions()[1].set_as_main_version()
+   >>> n
+   <Notebook: abc rev1[1]>
+   >>> n = Notebook.objects.all()[0]
+   >>> n
+   <Notebook: abc rev1[1]>
    
-
 
 Truth table, access to the attributes of the context. 
 
@@ -187,8 +199,6 @@ Truth table commands in context.
 +----------------------+-------------------------+-------------------------+------------------------------+
 | get_current_revision | return main revision    | raise VersionDisabled\  | raise VersionDisabled\       |
 |                      |                         | MethodException         | MethodException              |
-+----------------------+-------------------------+-------------------------+------------------------------+
-| compare_current_to   | compare self == rev     | compare                 |                              |
 +----------------------+-------------------------+-------------------------+------------------------------+
 |                      |                         |                         |                              |
 +----------------------+-------------------------+-------------------------+------------------------------+
