@@ -74,8 +74,7 @@ class ValueStandard(Value):
             try:
                 return _get_default_model_value(obj_main)
             except ValueStandardException:
-                raise ValueStandardException('The field is not set the '
-                                             'default value.')
+                raise
 
     def data_from_main_to_revision(obj_main, obj_revision, field_name):
         return self._get_default()
@@ -374,7 +373,17 @@ class VersionModel(models.Model):
         '''
         Return list all versions for this property.
         '''
-        return self.objects_version.get_all_revisions_for(self)
+        if self.check_is_revision():
+            raise VersionDisabledMethodException(
+                                  'The method can not be started from '
+                                  'the object of type "revision".')
+
+        if self.check_is_revision_new():
+            raise VersionDisabledMethodException(
+                                  'The method can not be started from '
+                                  'the object of type "revision new".')
+
+        return self.__class__.objects_version.get_all_revisions_for(self)
 
     def get_revisions_tree(self):
         '''
@@ -388,40 +397,28 @@ class VersionModel(models.Model):
         '''
         Return previous revision.
         '''
-        raise NotImplementedError('get_prev_revision')
+        if self.check_is_main_version():
+            raise VersionDisabledMethodException(
+                                  'The method can not be started from '
+                                  'the object of type "main".')
+
+        return self.version_parent_rev_pk
 
     def get_next_revisions(self):
         '''
         Return list next revisions.
         '''
-        raise NotImplementedError('get_next_revisions')
+        if self.check_is_main_version():
+            raise VersionDisabledMethodException(
+                                  'The method can not be started from '
+                                  'the object of type "main".')
 
-    def revision_erase(self):
-        '''
-        Deletes the current version, and connects the ends 
-        of the broken chain version.
-        '''
-        raise NotImplementedError('revision_erase')
+        if self.check_is_revision_new():
+            raise VersionDisabledMethodException(
+                                  'The method can not be started from '
+                                  'the object of type "revision new".')
 
-    def delete_current_revision(self):
-        '''
-        Delete current revision or current revision with all child revisions.
-        '''
-        raise NotImplementedError('delete_current_revision')
-
-    def delete_older_revisions(self,
-                                    with_current=False,
-                                    with_nearby_branches=False):
-        '''
-        Remove older revisions than current
-        '''
-        raise NotImplementedError('delete_older_revisions')
-
-    def delete_newer_revisions(self, with_current=False):
-        '''
-        Remove the newer versions than current
-        '''
-        raise NotImplementedError('delete_newer_revisions')
+        return self.__class__.objects_version.get_next_revisions(self)
 
     def set_as_main_version(self):
         '''
@@ -485,12 +482,6 @@ class VersionModel(models.Model):
         '''
         return self.version_parent_pk != None and \
                 self.version_unique_on == None
-
-    def check_is_head_branch(self):
-        '''
-        Is this a major version.
-        '''
-        raise NotImplementedError('check_is_head')
 
     def get_version_hash(self):
         '''

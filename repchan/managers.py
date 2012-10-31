@@ -13,8 +13,16 @@ class VersionManager(models.Manager):
     Manager version history.
     '''
 
-    def heads_list(self):
-        pass
+    def get_query_set(self):
+        return super(VersionManager, self).get_query_set()
+
+    def get_all_revisions_for(self, main_version):
+        return self.get_query_set().filter(version_parent_pk=main_version,
+                                           version_unique_on__isnull=False)
+
+    def get_next_revisions(self, revision):
+        return self.get_query_set().filter(version_parent_rev_pk=revision,
+                                           version_unique_on__isnull=False)
 
 
 class DefaultManager(models.Manager):

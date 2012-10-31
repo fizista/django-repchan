@@ -31,6 +31,18 @@ def gen_hash(hash_len=64, **kwargs):
     return hash
 
 
+def ipp_gen(start=1):
+    '''
+    Counter generator
+    ipp = ipp_gen().next # 
+    ipp() # i++
+    '''
+    i = start
+    while 1:
+        yield i
+        i += 1
+
+
 class TestModelBase(TestCaseVersion):
 
     def notebook_data_generator(self, number):
@@ -56,6 +68,9 @@ class TestModelBase(TestCaseVersion):
 
     def notebook_generator_rev(self, number, pk_main, pk_rev_old=None,
                                have_children=False):
+        '''
+        * number - a unique sequence number generated data
+        '''
         note_data = self.notebook_data_generator(number)
         note = Notebook(**note_data)
         note.version_parent_pk = pk_main
@@ -404,6 +419,91 @@ class TestModelVersions(TestModelBase):
             note_rev2.number = 2
         with self.assertRaises(VersionReadOnlyException):
             note_rev2.alias = 'new alias data'
+
+    def test_get_revisions(self):
+
+        ipp = ipp_gen(1).next
+
+        note_main = self.notebook_generator_main(ipp())
+
+        note_rev1 = self.notebook_generator_rev(ipp(), note_main, None, True)
+        note_rev1_1 = self.notebook_generator_rev(ipp(), note_main, note_rev1, True)
+        note_rev1_1_1 = self.notebook_generator_rev_new(ipp(), note_main, note_rev1_1)
+
+        note_rev1_2 = self.notebook_generator_rev(ipp(), note_main, note_rev1)
+
+
+        note2_main = self.notebook_generator_main(ipp())
+
+        note2_rev1 = self.notebook_generator_rev(ipp(), note2_main, None, True)
+        note2_rev1_1 = self.notebook_generator_rev(ipp(), note2_main, note_rev1, True)
+        note2_rev1_1_1 = self.notebook_generator_rev_new(ipp(), note2_main, note_rev1_1)
+
+        note2_rev1_2 = self.notebook_generator_rev(ipp(), note2_main, note_rev1)
+
+        # check to see if there are revisions from one object
+        self.assertEqual(
+                         list(note_main.get_revisions().order_by('pk').values_list('pk')),
+                         [(note_rev1.pk,),
+                          (note_rev1_1.pk,),
+                          (note_rev1_2.pk,)])
+
+    def test_get_prev_revision(self):
+
+        ipp = ipp_gen(1).next
+
+        note_main = self.notebook_generator_main(ipp())
+
+        note_rev1 = self.notebook_generator_rev(ipp(), note_main, None, True)
+        note_rev1_1 = self.notebook_generator_rev(ipp(), note_main, note_rev1, True)
+        note_rev1_1_1 = self.notebook_generator_rev_new(ipp(), note_main, note_rev1_1)
+
+        note_rev1_2 = self.notebook_generator_rev(ipp(), note_main, note_rev1)
+
+        self.assertEqual(
+                         (note_rev1_1_1.get_prev_revision().pk,
+                          note_rev1_1.get_prev_revision().pk,
+                          note_rev1.get_prev_revision(),
+                          note_rev1_2.get_prev_revision().pk,),
+                         (note_rev1_1.pk,
+                          note_rev1.pk,
+                          None,
+                          note_rev1.pk))
+
+    def test_get_next_revisions(self):
+
+        ipp = ipp_gen(1).next
+
+        note_main = self.notebook_generator_main(ipp())
+
+        note_rev1 = self.notebook_generator_rev(ipp(), note_main, None, True)
+        note_rev1_1 = self.notebook_generator_rev(ipp(), note_main, note_rev1, True)
+        note_rev1_1_1 = self.notebook_generator_rev(ipp(), note_main, note_rev1_1)
+
+        note_rev1_2 = self.notebook_generator_rev(ipp(), note_main, note_rev1)
+
+
+        # no next revisions
+        self.assertEqual(
+                         list(note_rev1_1_1.get_next_revisions().\
+                                order_by('pk').values_list('pk')),
+                         []
+                         )
+
+        # one revision
+        self.assertEqual(
+                         list(note_rev1_1.get_next_revisions().\
+                                order_by('pk').values_list('pk')),
+                         [(note_rev1_1_1.pk,)]
+                         )
+
+        # two revision
+        self.assertEqual(
+                         list(note_rev1.get_next_revisions().\
+                                order_by('pk').values_list('pk')),
+                         [(note_rev1_1.pk,), (note_rev1_2.pk,)]
+                         )
+
 
 
 class TestModelTransparency(TestCaseVersion):

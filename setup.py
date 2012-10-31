@@ -15,8 +15,8 @@ except ImportError:
 
 import repchan as distmeta
 
-if os.path.exists("README.md"):
-    long_description = codecs.open("README.md", "r", "utf-8").read()
+if os.path.exists("README.rst"):
+    long_description = codecs.open("README.rst", "r", "utf-8").read()
 else:
     long_description = ""
 
@@ -40,6 +40,7 @@ setup(
 
     install_requires=[
         "django>=1.4.0",
+        "south>=0.7.6",
     ],
 
     package_data={

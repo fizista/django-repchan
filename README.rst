@@ -1,12 +1,8 @@
-==============
-django-repchan
-==============
+====================
+About django-repchan
+====================
 
-=====
-About
-=====
-
-Library for versioning of data from django models.
+Django-repchan allows easy data versioning for the Django framework.
 
 Conceptual design for the library:
 
@@ -22,8 +18,88 @@ Other similar projects:
 * django-revisions [`source <https://github.com/stdbrouw/django-revisions>`_, `docs <http://stdbrouw.github.com/django-revisions/>`_]
 
 ============
+Requirements
+============
+
+Your application must use the migration South_.
+
+* Django_ >= 1.4
+* South_ >= 7.6
+
+
+============
 Installation
 ============
+
+Stable release
+--------------
+
+Not yet ready.
+
+Development
+-----------
+
+The latest development version can be installed directly from GitHub:
+
+pip install http://github.com/fizista/django-repchan.git
+
+=====
+Setup
+=====
+
+* Add repchan to your INSTALLED_APPS
+
+::
+   INSTALLED_APPS += ('repchan',)
+  
+* Make sure that the database models you want to versioned, have been initiated by South_ migration.  Otherwise, use the following example initialization migration:
+  
+::
+   ./manage.py convert_to_south your_app
+  
+* In your django models replace "django.db.models.Model" to "repchan.models.VersionModel", for example:
+
+::
+   # before changes
+   from django.db import models
+   
+   class Book(VersionModel):
+      title = models.CharField(max_length=200)
+
+::
+   # after changes
+   from repchan.models import VersionModel
+   
+   class Book(VersionModel):
+      title = models.CharField(max_length=200)
+      
+* Synchronize database
+
+::
+   ./manage.py syncdb
+   ./manage.py schemamigration your_app --auto
+   ./manage.py migrate your_app
+   
+=====
+Usage
+=====
+
+::
+   class Notebook(VersionModel): 
+       note = models.CharField(max_length=150)
+       number = models.IntegerField()
+       alias = models.CharField(max_length=150, default='none')
+   
+       def __unicode__(self):
+           return u'%s[%d]' % (self.note, self.number)
+
+       class Meta:
+           unique_together = ('note', 'number')
+
+   >>> n = Notebook(note='abc',number=1,alias='ABC')
+   >>> n.get_revisions()
+   []
+   
 
 
 Truth table, access to the attributes of the context. 
@@ -61,40 +137,62 @@ Truth table attributes in the context.
 
 Truth table commands in context.
 
-+---------------------+-------------------------+-------------------------+------------------------------+
-| self                | main                    | rev                     | rev new                      |
-+=====================+=========================+=========================+==============================+
-| create_revision     | copy self to rev new    | copy self to rev new    | raise  VersionRevision\      |
-|                     |                         |                         | CreateException              |
-+---------------------+-------------------------+-------------------------+------------------------------+
-| commit              | raise VersionDisabled\  | raise  VersionDisabled\ | if self.hash != pre_rev.hash |
-|                     | MethodException         | MethodException         | _save                        |
-|                     |                         |                         | else VersionCommitException  |
-+---------------------+-------------------------+-------------------------+------------------------------+
-| set_as_main_version | raise VersionDisabled\  | copy self to main       | raise  VersionSetAs\         |
-|                     | MethodException         |                         | MainException                |
-+---------------------+-------------------------+-------------------------+------------------------------+
-| save                | create_revision rev     | raise VersionDisabled\  | raise VersionDisabled\       |
-|                     | commit rev              | MethodException         | MethodException              |
-|                     | set_as_main_version rev |                         |                              |
-+---------------------+-------------------------+-------------------------+------------------------------+
-| delete              | object move to trash    | raise VersionDisabled\  | raise VersionDisabled\       |
-|                     | if object in trash      | MethodException         | MethodException              |
-|                     | then remove object      |                         |                              |
-+---------------------+-------------------------+-------------------------+------------------------------+
-| django.db.model.\   | normal                  |                         |                              |
-| signals.pre_save    |                         | disabled                | disabled                     |
-+---------------------+-------------------------+-------------------------+------------------------------+
-| django.db.model.\   | normal                  |                         |                              |
-| signals.post_save   |                         | disabled                | disabled                     |
-+---------------------+-------------------------+-------------------------+------------------------------+
-| django.db.model.\   | normal                  |                         |                              |
-| signals.pre_delete  | if object in trash      | disabled                | disabled                     |
-|                     | disabled                |                         |                              |
-+---------------------+-------------------------+-------------------------+------------------------------+
-| django.db.model.\   | normal                  |                         |                              |
-| signals.post_delete | if object in trash      | disabled                | disabled                     |
-|                     | disabled                |                         |                              |
-+---------------------+-------------------------+-------------------------+------------------------------+
-|                     |                         |                         |                              |
-+---------------------+-------------------------+-------------------------+------------------------------+
++----------------------+-------------------------+-------------------------+------------------------------+
+| self                 | main                    | rev                     | rev new                      |
++======================+=========================+=========================+==============================+
+| create_revision      | copy self to rev new    | copy self to rev new    | raise  VersionRevision\      |
+|                      |                         |                         | CreateException              |
++----------------------+-------------------------+-------------------------+------------------------------+
+| commit               | raise VersionDisabled\  | raise  VersionDisabled\ | if self.hash != pre_rev.hash |
+|                      | MethodException         | MethodException         | _save                        |
+|                      |                         |                         | else VersionCommitException  |
++----------------------+-------------------------+-------------------------+------------------------------+
+| set_as_main_version  | raise VersionDisabled\  | copy self to main       | raise  VersionSetAs\         |
+|                      | MethodException         |                         | MainException                |
++----------------------+-------------------------+-------------------------+------------------------------+
+| save                 | if main != main_rev     |                         |                              |
+|                      | create_revision rev     | raise VersionDisabled\  | raise VersionDisabled\       |
+|                      | commit rev              | MethodException         | MethodException              |
+|                      | set_as_main_version rev |                         |                              |
++----------------------+-------------------------+-------------------------+------------------------------+
+| delete               | object move to trash    | raise VersionDisabled\  | raise VersionDisabled\       |
+|                      | if object in trash      | MethodException         | MethodException              |
+|                      | then remove object      |                         |                              |
++----------------------+-------------------------+-------------------------+------------------------------+
+| django.db.model.\    | normal                  |                         |                              |
+| signals.pre_save     |                         | disabled                | disabled                     |
++----------------------+-------------------------+-------------------------+------------------------------+
+| django.db.model.\    | normal                  |                         |                              |
+| signals.post_save    |                         | disabled                | disabled                     |
++----------------------+-------------------------+-------------------------+------------------------------+
+| django.db.model.\    | normal                  |                         |                              |
+| signals.pre_delete   | if object in trash      | disabled                | disabled                     |
+|                      | disabled                |                         |                              |
++----------------------+-------------------------+-------------------------+------------------------------+
+| django.db.model.\    | normal                  |                         |                              |
+| signals.post_delete  | if object in trash      | disabled                | disabled                     |
+|                      | disabled                |                         |                              |
++----------------------+-------------------------+-------------------------+------------------------------+
+| get_revisions        | return list django      | raise VersionDisabled\  | raise VersionDisabled\       |
+|                      | QuerySet revisions      | MethodException         | MethodException              |
++----------------------+-------------------------+-------------------------+------------------------------+
+| get_revisions_tree   | return tree list all    | raise VersionDisabled\  | raise VersionDisabled\       |
+|                      | revisions               | MethodException         | MethodException              |
++----------------------+-------------------------+-------------------------+------------------------------+
+| get_prev_revision    | raise VersionDisabled\  | return prev revision    | return prev revision         |
+|                      | MethodException         | or None                 | or None                      |
++----------------------+-------------------------+-------------------------+------------------------------+
+| get_next_revisions   | raise VersionDisabled\  | return list revisions   | raise VersionDisabled\       |
+|                      | MethodException         |                         | MethodException              |
++----------------------+-------------------------+-------------------------+------------------------------+
+| get_current_revision | return main revision    | raise VersionDisabled\  | raise VersionDisabled\       |
+|                      |                         | MethodException         | MethodException              |
++----------------------+-------------------------+-------------------------+------------------------------+
+|                      |                         |                         |                              |
++----------------------+-------------------------+-------------------------+------------------------------+
+|                      |                         |                         |                              |
++----------------------+-------------------------+-------------------------+------------------------------+
+
+
+.. _South: http://south.readthedocs.org/en/latest/index.html
+.. _Django: https://www.djangoproject.com/

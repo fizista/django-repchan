@@ -39,10 +39,6 @@ def signal_send_status(instance, signal_object):
     except KeyError:
         return True
 
-def signal_resend(instance, signal_object):
-    'Resend signal from buffer'
-    signal_buffer_clear(instance, signal_object)
-
 
 def signal_allow(instance, signal_object, count=1):
     'Allow you to send a signal "count" times'
