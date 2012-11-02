@@ -4,3 +4,6 @@ TODO:
 * add delete revisions
 * signals unittest
 * code testing on multiple databases
+* admin integration
+* sqlite version_unique_on = None does not work as in Postgress
+* mysql does not work

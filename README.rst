@@ -25,6 +25,7 @@ Your application must use the migration South_.
 
 * Django_ >= 1.4
 * South_ >= 7.6
+* Postgres (now with MySQL and SQLite does not work)
 
 
 ============
