@@ -51,16 +51,19 @@ Setup
 * Add repchan to your INSTALLED_APPS
 
 ::
+
    INSTALLED_APPS += ('repchan',)
   
 * Make sure that the database models you want to versioned, have been initiated by South_ migration.  Otherwise, use the following example initialization migration:
   
 ::
+
    ./manage.py convert_to_south your_app
   
 * In your django models replace "django.db.models.Model" to "repchan.models.VersionModel", for example:
 
 ::
+
    # before changes
    from django.db import models
    
@@ -68,6 +71,7 @@ Setup
       title = models.CharField(max_length=200)
 
 ::
+
    # after changes
    from repchan.models import VersionModel
    
@@ -77,6 +81,7 @@ Setup
 * Synchronize database
 
 ::
+
    ./manage.py syncdb
    ./manage.py schemamigration your_app --auto
    ./manage.py migrate your_app
@@ -86,6 +91,7 @@ Usage
 =====
 
 ::
+
    class Notebook(VersionModel): 
        note = models.CharField(max_length=150)
        number = models.IntegerField()
