@@ -345,8 +345,7 @@ class VersionModel(models.Model):
                                   editable=False,
                                   verbose_name=_(u'Creation date'))
 
-    version_hash = models.CharField(
-                                    max_length=512,
+    version_hash = models.TextField(
                                     blank=True,
                                     default='',
                                     editable=False,
