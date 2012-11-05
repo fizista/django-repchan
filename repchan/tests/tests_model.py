@@ -295,6 +295,22 @@ class TestModelVersions(TestModelBase):
         with self.assertRaises(VersionDisabledMethodException):
             note_rev2_new.commit()
 
+    def test_check_is(self):
+        note_main = self.notebook_generator_main(1)
+        note_rev1_new = self.notebook_generator_rev_new(1, note_main)
+        note_rev2 = self.notebook_generator_rev(2, note_main, None, True)
+
+        self.assertTrue(note_main.check_is_main_version())
+        self.assertFalse(note_main.check_is_revision())
+        self.assertFalse(note_main.check_is_revision_new())
+
+        self.assertFalse(note_rev1_new.check_is_main_version())
+        self.assertFalse(note_rev1_new.check_is_revision())
+        self.assertTrue(note_rev1_new.check_is_revision_new())
+
+        self.assertFalse(note_rev2.check_is_main_version())
+        self.assertTrue(note_rev2.check_is_revision())
+        self.assertFalse(note_rev2.check_is_revision_new())
 
     def test_create_revision(self):
         note_main = self.notebook_generator_main(1)
@@ -324,6 +340,21 @@ class TestModelVersions(TestModelBase):
                         version_unique_on=None,
                         version_in_trash=False,
                         info='second new revision')
+
+
+        # Test copy of the object, from another revision.
+        rev_new1.commit()
+        rev_new3 = rev_new1.create_revision()
+        self.assertEqual([rev_new1.note, rev_new1.number, rev_new1.alias],
+                         [rev_new3.note, rev_new3.number, rev_new3.alias])
+        self.assertVersionStatus(rev_new3,
+                        version_parent_pk=note_main,
+                        version_parent_rev_pk=rev_new1,
+                        version_have_children=False,
+                        version_hash='',
+                        version_unique_on=None,
+                        version_in_trash=False,
+                        info='3rd new revision')
 
         # It is forbidden to create the revision of the previous revision 
         # is not accepted.
