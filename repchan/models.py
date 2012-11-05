@@ -14,7 +14,11 @@ from repchan.managers import VersionManager, RawManager, DefaultManager
 from repchan.signals import revision_post_commit, revision_post_create, \
                             revision_set_as_main, signal_send_on, \
                             signal_send_off, signal_send_mask, signal_allow
-
+from repchan.decorators import disable_in_main_context, \
+                               disable_in_revision_context, \
+                               disable_in_revision_new_context
+from repchan.exceptions import VersionException, VersionReadOnlyException, \
+                               VersionCommitException
 
 NULL_DATE = datetime.datetime(1991, 12, 21).replace(tzinfo=utc)
 
@@ -24,7 +28,6 @@ signal_send_mask(models.signals.post_save)
 
 signal_send_mask(models.signals.pre_delete)
 signal_send_mask(models.signals.post_delete)
-
 
 
 class Value(object):
@@ -89,16 +92,6 @@ class ValueStandard(Value):
 
 def _get_current_date():
     return datetime.datetime.utcnow().replace(tzinfo=utc)
-
-
-class VersionException(Exception): pass
-class VersionBranchException(VersionException): pass
-class VersionCommitException(VersionException): pass
-
-class VersionReadOnlyException(Exception): pass
-class VersionRevisionCreateException(Exception): pass
-class VersionDisabledMethodException(Exception): pass
-class VersionSetAsMainException(Exception): pass
 
 
 class VersionModelBase(models.base.ModelBase):
@@ -367,21 +360,13 @@ class VersionModel(models.Model):
     objects_version = VersionManager()
     objects_raw = RawManager()
 
+    @disable_in_revision_context
+    @disable_in_revision_new_context
     def get_revisions(self, from_date=None, to_date=None, hash=None,
                                     head=None):
         '''
         Return list all versions for this property.
         '''
-        if self.check_is_revision():
-            raise VersionDisabledMethodException(
-                                  'The method can not be started from '
-                                  'the object of type "revision".')
-
-        if self.check_is_revision_new():
-            raise VersionDisabledMethodException(
-                                  'The method can not be started from '
-                                  'the object of type "revision new".')
-
         return self.__class__.objects_version.get_all_revisions_for(self)
 
     def get_revisions_tree(self):
@@ -392,33 +377,23 @@ class VersionModel(models.Model):
         '''
         raise NotImplementedError('get_revisions_tree')
 
+    @disable_in_main_context
     def get_prev_revision(self):
         '''
         Return previous revision.
         '''
-        if self.check_is_main_version():
-            raise VersionDisabledMethodException(
-                                  'The method can not be started from '
-                                  'the object of type "main".')
-
         return self.version_parent_rev_pk
 
+    @disable_in_revision_new_context
+    @disable_in_main_context
     def get_next_revisions(self):
         '''
         Return list next revisions.
         '''
-        if self.check_is_main_version():
-            raise VersionDisabledMethodException(
-                                  'The method can not be started from '
-                                  'the object of type "main".')
-
-        if self.check_is_revision_new():
-            raise VersionDisabledMethodException(
-                                  'The method can not be started from '
-                                  'the object of type "revision new".')
-
         return self.__class__.objects_version.get_next_revisions(self)
 
+    @disable_in_revision_new_context
+    @disable_in_main_context
     def set_as_main_version(self):
         '''
         Set the current reversion as the main version.
@@ -426,17 +401,6 @@ class VersionModel(models.Model):
         If you try to re-set the major version as the main, 
         it is an exception thrown VersionException
         '''
-        # Check if this is the main version
-        if self.check_is_main_version():
-            raise VersionDisabledMethodException(
-                                  'The method can not be started from '
-                                  'the object of type "main".')
-
-        if self.check_is_revision_new():
-            raise VersionDisabledMethodException(
-                                  'The method can not be started from '
-                                  'the object of type "revision new".')
-
         main_version = self.version_parent_pk
 
         # copy fields
@@ -500,17 +464,9 @@ class VersionModel(models.Model):
             self.version_in_trash = False
             self._save()
 
+    @disable_in_revision_context
+    @disable_in_revision_new_context
     def delete(self, hard=False, using=None, *args, **kwargs):
-        if self.check_is_revision():
-            raise VersionDisabledMethodException(
-                                  'The method can not be started from '
-                                  'the object of type "revision".')
-
-        if self.check_is_revision_new():
-            raise VersionDisabledMethodException(
-                                  'The method can not be started from '
-                                  'the object of type "revision new".')
-
         # removed from the database or move to trash
         if self.version_in_trash or hard:
             # without sending signals post_delete, pre_delete
@@ -695,6 +651,7 @@ class VersionModel(models.Model):
                                                 name,))
         super(VersionModel, self).__delattr__(name)
 
+    @disable_in_revision_new_context
     def create_revision(self, using=None):
         '''
         Creates next revision of the current object.
@@ -704,12 +661,6 @@ class VersionModel(models.Model):
         
         Keeps foreign keys and many to many relationships.
         '''
-        if self.check_is_revision_new():
-            raise VersionRevisionCreateException(
-                                         'You can create a new revision from '
-                                         'the object of type only '
-                                         '"main" or "revision".')
-
         new_revision = self.__class__()
 
         new_revision = self._copy_fields(new_revision)
@@ -752,13 +703,12 @@ class VersionModel(models.Model):
 
         return new_revision
 
+    @disable_in_revision_context
+    @disable_in_main_context
     def commit(self, using=None):
         '''
         Commit new revision
         '''
-        if self.check_is_main_version() or self.check_is_revision():
-            raise VersionDisabledMethodException('You can\'t commit this object.')
-
         # Check if there are changes
         hash = self.get_version_hash()
         old_hash = getattr(self.version_parent_rev_pk, 'version_hash', None)
@@ -779,18 +729,9 @@ class VersionModel(models.Model):
         revision_post_commit.send(sender=self.__class__, instance=self,
                                   using=using)
 
+    @disable_in_revision_context
+    @disable_in_revision_new_context
     def save(self, force_insert=False, force_update=False, using=None):
-        # Check if this is the main version
-        if self.check_is_revision():
-            raise VersionDisabledMethodException(
-                                  'The method can not be started from '
-                                  'the object of type "revision".')
-
-        if self.check_is_revision_new():
-            raise VersionDisabledMethodException(
-                                  'The method can not be started from '
-                                  'the object of type "revision new".')
-
         # If no changes, then we drop writing.
         if self.version_parent_rev_pk:
             if self.get_version_hash() == self.version_parent_rev_pk.\

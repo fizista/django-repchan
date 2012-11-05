@@ -14,12 +14,10 @@ from repchan.tests.repchantest.models import AuthorAlias, Author, Section, \
                                              Chapter, Page, Book, Notebook, \
                                              CollectionNotebooks
 
-from repchan.models import VersionCommitException, \
+from repchan.exceptions import VersionCommitException, \
                            VersionReadOnlyException, \
-                           VersionRevisionCreateException, \
-                           VersionDisabledMethodException, \
-                           VersionSetAsMainException, \
-                           ValueStandard, \
+                           VersionDisabledMethodException
+from repchan.models import ValueStandard, \
                            NULL_DATE
 
 def gen_hash(hash_len=64, **kwargs):
@@ -358,7 +356,7 @@ class TestModelVersions(TestModelBase):
 
         # It is forbidden to create the revision of the previous revision 
         # is not accepted.
-        with self.assertRaises(VersionRevisionCreateException):
+        with self.assertRaises(VersionDisabledMethodException):
             rev_new2.create_revision()
 
     def test_set_as_main_version(self):
