@@ -662,7 +662,6 @@ class VersionModel(models.Model):
         Keeps foreign keys and many to many relationships.
         '''
         new_revision = self.__class__()
-
         new_revision = self._copy_fields(new_revision)
 
         # set version fields
@@ -671,21 +670,23 @@ class VersionModel(models.Model):
             new_revision.version_parent_rev_pk = self.version_parent_rev_pk
             new_revision.version_have_children = False
             new_revision.version_date = None
-            #new_revision.version_hash = ''
         else:
             new_revision.version_parent_pk = self.version_parent_pk
             new_revision.version_parent_rev_pk = self
             new_revision.version_have_children = False
             new_revision.version_date = None
-            #new_revision.version_hash = ''
 
         # Turn off unique keys
         new_revision.version_unique_on = None
 
+        # we need to first save the object to be able to copy the 
+        # data from ManyToMany fields
         new_revision._save()
 
+        # A copy here ManyToMany fields
         new_revision = self._copy_fields_mtm(new_revision)
 
+        # Set the value of the field is not versioned.
         if self.check_is_main_version():
             new_revision = self._set_fields_outside_changes(
                                         new_revision,
@@ -695,8 +696,10 @@ class VersionModel(models.Model):
                                         new_revision,
                                         'data_from_revision_to_revision')
 
+        # At this point, the entire object is copied.
         new_revision._save()
 
+        # Time to send signals
         using = using or router.db_for_write(self.__class__, instance=self)
         revision_post_create.send(sender=self.__class__, instance=self,
                                   using=using)
