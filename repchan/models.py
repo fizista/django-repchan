@@ -588,24 +588,38 @@ class VersionModel(models.Model):
         return object_new
 
     def _copy_fields_mtm(self, object_new):
+        '''
+        Copies a field, but does not remove redundant existing fields.
+        
+        ::
+        
+            return object_new with (fields_self + fields_object_new)
+        '''
         fields_names = list(
                             set(self._get_fields_many_to_many()) -
                             set(self._get_fields_outside_changes().keys()))
         for field_mtm in fields_names:
-            source = getattr(self, field_mtm.attname)
-            destination = getattr(object_new, field.attname)
+            source = getattr(self, field_mtm)
+            destination = getattr(object_new, field_mtm)
             for item in source.all():
                 destination.add(item)
         return object_new
 
     def _copy_changed_fields_mtm(self, object_new):
+        '''
+        Copies a field, and removes redundant existing fields.
+        
+        ::
+        
+            return object_new with (fields_self)
+        '''
         fields_names = list(
                             set(self._get_fields_many_to_many()) -
                             set(self._get_fields_outside_changes().keys()))
 
         for field_mtm in fields_names:
-            source = getattr(self, field_mtm.attname)
-            destination = getattr(object_new, field.attname)
+            source = getattr(self, field_mtm)
+            destination = getattr(object_new, field_mtm)
 
             try:
                 source_pk = zip(*source.all().values_list('pk'))[0]
@@ -617,8 +631,7 @@ class VersionModel(models.Model):
                 destination_pk = []
 
             # remove unnecessary fields
-            intersection_pk = [i for i in source_pk if i in destination_pk]
-            to_delete_pk = list(set(destination_pk) - set(intersection_pk))
+            to_delete_pk = list(set(source_pk) ^ set(destination_pk))
             to_delete = destination.filter(pk__in=to_delete_pk)
             for td in to_delete:
                 destination.remove(td)

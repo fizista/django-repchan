@@ -11,7 +11,8 @@ from django.db import IntegrityError
 
 from repchan.tests.utils import TestCaseVersion
 from repchan.tests.repchantest.models import AuthorAlias, Author, Section, \
-                                             Chapter, Page, Book, Notebook
+                                             Chapter, Page, Book, Notebook, \
+                                             CollectionNotebooks
 
 from repchan.models import VersionCommitException, \
                            VersionReadOnlyException, \
@@ -147,6 +148,15 @@ class TestModelBase(TestCaseVersion):
         assertEqual(version_in_trash,
                      version_object.version_in_trash,
                      'version_in_trash')
+
+    def assertEqialModelObjectPk(self, first, second):
+        '''
+        Compare primary keys in objects.
+        '''
+        self.assertEqual(
+                         list(first.order_by('pk').values_list('pk')),
+                         list(second.order_by('pk').values_list('pk'))
+                         )
 
     def time_start_stop(self, method, *args, **kwargs):
         '''
@@ -504,6 +514,44 @@ class TestModelVersions(TestModelBase):
                                 order_by('pk').values_list('pk')),
                          [(note_rev1_1.pk,), (note_rev1_2.pk,)]
                          )
+
+
+    def test_copy_mtm_fields(self):
+
+        ipp = ipp_gen(1).next
+
+        note1_main = self.notebook_generator_main(ipp())
+        note2_main = self.notebook_generator_main(ipp())
+        note3_main = self.notebook_generator_main(ipp())
+        note4_main = self.notebook_generator_main(ipp())
+        note5_main = self.notebook_generator_main(ipp())
+
+        cn = CollectionNotebooks()
+        cn._save()
+        cn.notebooks.add(note1_main)
+        cn.notebooks.add(note2_main)
+        cn.notebooks.add(note3_main)
+        cn._save()
+
+        cn1 = CollectionNotebooks()
+        cn1._save()
+
+        cn1 = cn._copy_fields_mtm(cn1)
+        cn1._save()
+
+        self.assertEqialModelObjectPk(cn.notebooks.all(), cn1.notebooks.all())
+
+        cn.notebooks.add(note4_main)
+        cn.notebooks.add(note5_main)
+        cn.notebooks.remove(note2_main, note1_main)
+        cn._save()
+
+        cn1 = cn._copy_changed_fields_mtm(cn1)
+        cn1.save()
+
+        self.assertEqialModelObjectPk(cn.notebooks.all(), cn1.notebooks.all())
+
+
 
 
 
