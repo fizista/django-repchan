@@ -37,6 +37,10 @@ Stable release
 
 Not yet ready.
 
+What works:
+
+* Versioning of data from models using Postgres database
+
 Development
 -----------
 
@@ -120,6 +124,39 @@ Usage
    >>> n
    <Notebook: abc rev1[1]>
    
+=======
+Testing
+=======
+
+* add 'repchan' and 'repchan.tests.repchantest' to your INSTALLED_APPS
+
+::
+
+   INSTALLED_APPS += ('repchan', 'repchan.tests.repchantest')
+   
+   
+* model initialization
+
+::
+   ./manage.py syncdb
+   ./manage.py migrate repchan.tests.repchantest
+   
+* test run
+
+::
+   ./manage.py test repchan
+    
+   
+=================================================
+Tables range of methods, depending on the context
+=================================================
+
+Working range methods in the model depends on the context. We have three contexts:
+
+* "main" - The object is in the normal state, which is the main version. You could compare it to an object without an installed data versioning.
+* "revision" - The next version of the data object in the repository.
+* "revision new" - Working copy, awaiting acceptance of the changes.
+
 
 Truth table, access to the attributes of the context. 
 
