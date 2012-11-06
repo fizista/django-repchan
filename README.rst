@@ -46,7 +46,9 @@ Development
 
 The latest development version can be installed directly from GitHub:
 
-pip install http://github.com/fizista/django-repchan.git
+::
+
+   pip install http://github.com/fizista/django-repchan.git
 
 =====
 Setup
@@ -77,10 +79,14 @@ Setup
 ::
 
    # after changes
+   from repchan.managers import DefaultManager
    from repchan.models import VersionModel
    
    class Book(VersionModel):
       title = models.CharField(max_length=200)
+      
+      # Note! Without below manager, data revisions are normally visible.
+      objects = DefaultManager() 
       
 * Synchronize database
 
