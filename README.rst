@@ -138,12 +138,14 @@ Testing
 * model initialization
 
 ::
+
    ./manage.py syncdb
    ./manage.py migrate repchan.tests.repchantest
    
 * test run
 
 ::
+
    ./manage.py test repchan
     
    
