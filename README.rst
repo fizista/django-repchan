@@ -73,7 +73,7 @@ Setup
    # before changes
    from django.db import models
    
-   class Book(VersionModel):
+   class Book(models.Model):
       title = models.CharField(max_length=200)
 
 ::
