@@ -355,6 +355,12 @@ class VersionModel(models.Model):
                                        default=False,
                                        verbose_name=_(u'Is it in the trash'))
 
+    # Each call to 'set_as_main_version' counter increases by one.
+    # Method 'set_as_main_version' is also called when the call to 'save'.
+    version_counter = models.IntegerField(
+                                       default=0,
+                                       verbose_name=_(u'Number of changes.'))
+
 
     objects = DefaultManager()
     objects_version = VersionManager()
@@ -392,6 +398,14 @@ class VersionModel(models.Model):
         '''
         return self.__class__.objects_version.get_next_revisions(self)
 
+    @disable_in_revision_context
+    @disable_in_revision_new_context
+    def get_number_of_changes(self):
+        '''
+        Returns the number of changes
+        '''
+        return self.version_counter
+
     @disable_in_revision_new_context
     @disable_in_main_context
     def set_as_main_version(self):
@@ -418,9 +432,10 @@ class VersionModel(models.Model):
         main_version.version_parent_pk = None
         main_version.version_parent_rev_pk = self
         main_version.version_have_children = False
-        main_version.version_date = NULL_DATE
+        main_version.version_date = _get_current_date()
         main_version.version_hash = ''
         main_version.version_unique_on = False
+        main_version.version_counter += 1
         main_version._save()
 
         revision_set_as_main.send(sender=self.__class__, instance=self)
@@ -676,6 +691,8 @@ class VersionModel(models.Model):
             new_revision.version_have_children = False
             new_revision.version_date = None
 
+        # Revisions are always the default value
+        new_revision.version_counter = 0
         # Turn off unique keys
         new_revision.version_unique_on = None
 

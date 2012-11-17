@@ -51,6 +51,10 @@ class Page(VersionModel): # RC
     contents = models.TextField()
     notes = models.TextField()
 
+    @property
+    def change_date(self):
+        return self.version_date
+
     def __unicode__(self):
         return u'%s[%d]' % (self.book, self.page_number)
 
@@ -77,8 +81,6 @@ class Notebook(VersionModel): # RC
 
     class Versioning:
         hash_len = 100
-        unique_together_with_fields = (('version_hash',
-                                        'version_unique_on'),)
 
 class CollectionNotebooks(VersionModel):
     notebooks = models.ManyToManyField(Notebook)

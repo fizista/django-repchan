@@ -106,6 +106,7 @@ class TestModelBase(TestCaseVersion):
                         version_date_pre=None,
                         version_date_post=None,
                         version_date=None,
+                        version_counter=None,
                         info=''):
         def assertEqual(a, b, var_name=''):
             self.assertEqual(a, b, msg='%s, var_name=%s ["%s" != "%s"]' %
@@ -129,8 +130,14 @@ class TestModelBase(TestCaseVersion):
         if version_date_pre and version_date_post:
             self.assertTrue(version_date_pre < version_object.version_date and
                         version_date_post > version_object.version_date,
-                        msg='%s, var_name=version_date. Outside the permitted time' %
-                            (info,))
+                        msg='"%s", var_name=version_date. '
+                            'Outside the permitted time.\n'
+                            'Excepted between [%s;%s]\n'
+                            'The time received [%s]' %
+                            (info,
+                             version_date_pre,
+                             version_date_post,
+                             version_object.version_date))
         if version_date:
             self.assertTrue(version_date == version_object.version_date,
                         msg='%s, var_name=version_date. '
@@ -146,6 +153,10 @@ class TestModelBase(TestCaseVersion):
         assertEqual(version_in_trash,
                      version_object.version_in_trash,
                      'version_in_trash')
+        if version_counter:
+            assertEqual(version_counter,
+                     version_object.version_counter,
+                     'version_counter')
 
     def assertEqialModelObjectPk(self, first, second):
         '''
@@ -216,7 +227,7 @@ class TestModelVersions(TestModelBase):
     def test_save(self):
         note_data = self.notebook_data_generator(1)
         note_main = Notebook(**note_data)
-        note_main.save()
+        start_date, end_date, null = self.time_start_stop(note_main.save)
 
         note1_rev1 = Notebook.objects_raw.filter(note=note_main.note,
                                                  version_unique_on=True)[0]
@@ -232,10 +243,12 @@ class TestModelVersions(TestModelBase):
                         version_parent_pk=None,
                         version_parent_rev_pk=note1_rev1,
                         version_have_children=False,
-                        version_date=NULL_DATE,
+                        version_date_pre=start_date,
+                        version_date_post=end_date,
                         version_hash='',
                         version_unique_on=False,
                         version_in_trash=False,
+                        version_counter=1,
                         info='main, copy rev1')
 
         with self.assertRaises(VersionDisabledMethodException):
@@ -378,9 +391,12 @@ class TestModelVersions(TestModelBase):
                         version_hash='',
                         version_unique_on=False,
                         version_in_trash=False,
+                        version_counter=0, # zero, because it is the object 
+                                           # created for test
                         info='is it rev2')
 
-        note_rev3.set_as_main_version()
+        start_date, end_date, null = self.time_start_stop(
+                                          note_rev3.set_as_main_version)
 
         self.assertEqual([note_main.note, note_main.number, note_main.alias],
                          [note_rev3.note, note_rev3.number, note_rev3.alias])
@@ -388,10 +404,12 @@ class TestModelVersions(TestModelBase):
                         version_parent_pk=None,
                         version_parent_rev_pk=note_rev3,
                         version_have_children=False,
-                        version_date=NULL_DATE,
+                        version_date_pre=start_date,
+                        version_date_post=end_date,
                         version_hash='',
                         version_unique_on=False,
                         version_in_trash=False,
+                        version_counter=1,
                         info='is it rev3')
 
         note_main = self.notebook_generator_main(5)
@@ -690,17 +708,17 @@ class TestUnique(TransactionTestCase):
 
     def test_unique_together(self):
 
-        item = { 'page_number':10,
-                 'book':Book.objects_raw.get(pk=1),
-                 'chapter':Chapter.objects.get(pk=1),
-                 'section':Section.objects_raw.get(pk=1),
-                 'contents':'asdasd',
-                 'notes' : 'oooo' }
-
-        Page(**item).save()
-        with self.assertRaises(IntegrityError):
-            Page(**item).save()
-        transaction.rollback()
+#        item = { 'page_number':10,
+#                 'book':Book.objects_raw.get(pk=1),
+#                 'chapter':Chapter.objects.get(pk=1),
+#                 'section':Section.objects_raw.get(pk=1),
+#                 'contents':'asdasd',
+#                 'notes' : 'oooo' }
+#
+#        Page(**item).save()
+#        with self.assertRaises(IntegrityError):
+#            Page(**item).save()
+#        transaction.rollback()
 
         note_data = {'note': 'qwerty', 'number': 1, 'alias':'aa'}
         Notebook(**note_data).save()

@@ -180,80 +180,85 @@ Truth table, access to the attributes of the context.
 
 Truth table attributes in the context.
 
-+-----------------------+---------------+--------------------+--------------------+
-|                       | main          | rev                | rev new            |
-+=======================+===============+====================+====================+
-| version_parent_pk     | None          | pk main            | pk main            |
-+-----------------------+---------------+--------------------+--------------------+
-| version_parent_rev_pk | pk rev        | None or pk old_rev | None or pk old_rev |
-+-----------------------+---------------+--------------------+--------------------+
-| version_have_children | False         | True if has        | False              |
-+-----------------------+---------------+--------------------+--------------------+
-| version_date          | null date     | rev create         | rev create         |
-+-----------------------+---------------+--------------------+--------------------+
-| version_hash          | null string   | hash               | null string        |
-+-----------------------+---------------+--------------------+--------------------+
-| version_unique_on     | False         | True               | None               |
-+-----------------------+---------------+--------------------+--------------------+
-| version_in_trash      | True or False | True or False      | True or False      |
-+-----------------------+---------------+--------------------+--------------------+
++-----------------------+---------------------+--------------------+--------------------+
+|                       | main                | rev                | rev new            |
++=======================+=====================+====================+====================+
+| version_parent_pk     | None                | pk main            | pk main            |
++-----------------------+---------------------+--------------------+--------------------+
+| version_parent_rev_pk | pk rev              | None or pk old_rev | None or pk old_rev |
++-----------------------+---------------------+--------------------+--------------------+
+| version_have_children | False               | True if has        | False              |
++-----------------------+---------------------+--------------------+--------------------+
+| version_date          | date of last change | rev create         | rev create         |
++-----------------------+---------------------+--------------------+--------------------+
+| version_hash          | null string         | hash               | null string        |
++-----------------------+---------------------+--------------------+--------------------+
+| version_unique_on     | False               | True               | None               |
++-----------------------+---------------------+--------------------+--------------------+
+| version_in_trash      | True or False       | True or False      | True or False      |
++-----------------------+---------------------+--------------------+--------------------+
+| version_counter       | number of changes   | 0                  | 0                  |
++-----------------------+---------------------+--------------------+--------------------+
 
 
 Truth table commands in context.
 
-+----------------------+-------------------------+-------------------------+------------------------------+
-| self                 | main                    | rev                     | rev new                      |
-+======================+=========================+=========================+==============================+
-| create_revision      | copy self to rev new    | copy self to rev new    | raise  VersionRevision\      |
-|                      |                         |                         | CreateException              |
-+----------------------+-------------------------+-------------------------+------------------------------+
-| commit               | raise VersionDisabled\  | raise  VersionDisabled\ | if self.hash != pre_rev.hash |
-|                      | MethodException         | MethodException         | _save                        |
-|                      |                         |                         | else VersionCommitException  |
-+----------------------+-------------------------+-------------------------+------------------------------+
-| set_as_main_version  | raise VersionDisabled\  | copy self to main       | raise  VersionSetAs\         |
-|                      | MethodException         |                         | MainException                |
-+----------------------+-------------------------+-------------------------+------------------------------+
-| save                 | if main != main_rev     |                         |                              |
-|                      | create_revision rev     | raise VersionDisabled\  | raise VersionDisabled\       |
-|                      | commit rev              | MethodException         | MethodException              |
-|                      | set_as_main_version rev |                         |                              |
-+----------------------+-------------------------+-------------------------+------------------------------+
-| delete               | object move to trash    | raise VersionDisabled\  | raise VersionDisabled\       |
-|                      | if object in trash      | MethodException         | MethodException              |
-|                      | then remove object      |                         |                              |
-+----------------------+-------------------------+-------------------------+------------------------------+
-| django.db.model.\    | normal                  |                         |                              |
-| signals.pre_save     |                         | disabled                | disabled                     |
-+----------------------+-------------------------+-------------------------+------------------------------+
-| django.db.model.\    | normal                  |                         |                              |
-| signals.post_save    |                         | disabled                | disabled                     |
-+----------------------+-------------------------+-------------------------+------------------------------+
-| django.db.model.\    | normal                  |                         |                              |
-| signals.pre_delete   | if object in trash      | disabled                | disabled                     |
-|                      | disabled                |                         |                              |
-+----------------------+-------------------------+-------------------------+------------------------------+
-| django.db.model.\    | normal                  |                         |                              |
-| signals.post_delete  | if object in trash      | disabled                | disabled                     |
-|                      | disabled                |                         |                              |
-+----------------------+-------------------------+-------------------------+------------------------------+
-| get_revisions        | return list django      | raise VersionDisabled\  | raise VersionDisabled\       |
-|                      | QuerySet revisions      | MethodException         | MethodException              |
-+----------------------+-------------------------+-------------------------+------------------------------+
-| get_revisions_tree   | return tree list all    | raise VersionDisabled\  | raise VersionDisabled\       |
-|                      | revisions               | MethodException         | MethodException              |
-+----------------------+-------------------------+-------------------------+------------------------------+
-| get_prev_revision    | raise VersionDisabled\  | return prev revision    | return prev revision         |
-|                      | MethodException         | or None                 | or None                      |
-+----------------------+-------------------------+-------------------------+------------------------------+
-| get_next_revisions   | raise VersionDisabled\  | return list revisions   | raise VersionDisabled\       |
-|                      | MethodException         |                         | MethodException              |
-+----------------------+-------------------------+-------------------------+------------------------------+
-| get_current_revision | return main revision    | raise VersionDisabled\  | raise VersionDisabled\       |
-|                      |                         | MethodException         | MethodException              |
-+----------------------+-------------------------+-------------------------+------------------------------+
-|                      |                         |                         |                              |
-+----------------------+-------------------------+-------------------------+------------------------------+
++-----------------------+-------------------------+-------------------------+------------------------------+
+| self                  | main                    | rev                     | rev new                      |
++=======================+=========================+=========================+==============================+
+| create_revision       | copy self to rev new    | copy self to rev new    | raise  VersionRevision\      |
+|                       |                         |                         | CreateException              |
++-----------------------+-------------------------+-------------------------+------------------------------+
+| commit                | raise VersionDisabled\  | raise  VersionDisabled\ | if self.hash != pre_rev.hash |
+|                       | MethodException         | MethodException         | _save                        |
+|                       |                         |                         | else VersionCommitException  |
++-----------------------+-------------------------+-------------------------+------------------------------+
+| set_as_main_version   | raise VersionDisabled\  | copy self to main       | raise  VersionSetAs\         |
+|                       | MethodException         |                         | MainException                |
++-----------------------+-------------------------+-------------------------+------------------------------+
+| save                  | if main != main_rev     |                         |                              |
+|                       | create_revision rev     | raise VersionDisabled\  | raise VersionDisabled\       |
+|                       | commit rev              | MethodException         | MethodException              |
+|                       | set_as_main_version rev |                         |                              |
++-----------------------+-------------------------+-------------------------+------------------------------+
+| delete                | object move to trash    | raise VersionDisabled\  | raise VersionDisabled\       |
+|                       | if object in trash      | MethodException         | MethodException              |
+|                       | then remove object      |                         |                              |
++-----------------------+-------------------------+-------------------------+------------------------------+
+| django.db.model.\     | normal                  |                         |                              |
+| signals.pre_save      |                         | disabled                | disabled                     |
++-----------------------+-------------------------+-------------------------+------------------------------+
+| django.db.model.\     | normal                  |                         |                              |
+| signals.post_save     |                         | disabled                | disabled                     |
++-----------------------+-------------------------+-------------------------+------------------------------+
+| django.db.model.\     | normal                  |                         |                              |
+| signals.pre_delete    | if object in trash      | disabled                | disabled                     |
+|                       | disabled                |                         |                              |
++-----------------------+-------------------------+-------------------------+------------------------------+
+| django.db.model.\     | normal                  |                         |                              |
+| signals.post_delete   | if object in trash      | disabled                | disabled                     |
+|                       | disabled                |                         |                              |
++-----------------------+-------------------------+-------------------------+------------------------------+
+| get_revisions         | return list django      | raise VersionDisabled\  | raise VersionDisabled\       |
+|                       | QuerySet revisions      | MethodException         | MethodException              |
++-----------------------+-------------------------+-------------------------+------------------------------+
+| get_revisions_tree    | return tree list all    | raise VersionDisabled\  | raise VersionDisabled\       |
+|                       | revisions               | MethodException         | MethodException              |
++-----------------------+-------------------------+-------------------------+------------------------------+
+| get_prev_revision     | raise VersionDisabled\  | return prev revision    | return prev revision         |
+|                       | MethodException         | or None                 | or None                      |
++-----------------------+-------------------------+-------------------------+------------------------------+
+| get_next_revisions    | raise VersionDisabled\  | return list revisions   | raise VersionDisabled\       |
+|                       | MethodException         |                         | MethodException              |
++-----------------------+-------------------------+-------------------------+------------------------------+
+| get_current_revision  | return main revision    | raise VersionDisabled\  | raise VersionDisabled\       |
+|                       |                         | MethodException         | MethodException              |
++-----------------------+-------------------------+-------------------------+------------------------------+
+| get_number_of_changes | returns the number of   | raise VersionDisabled\  | raise VersionDisabled\       |
+|                       | changes                 | MethodException         | MethodException              |
++-----------------------+-------------------------+-------------------------+------------------------------+
+|                       |                         |                         |                              |
++-----------------------+-------------------------+-------------------------+------------------------------+
 
 
 .. _South: http://south.readthedocs.org/en/latest/index.html
