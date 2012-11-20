@@ -513,6 +513,7 @@ class VersionModel(models.Model):
                     )
 
             self.version_in_trash = True
+            self.version_date = _get_current_date()
             self._save()
 
             # send post_delete signals
