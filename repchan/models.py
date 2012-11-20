@@ -16,7 +16,8 @@ from repchan.signals import revision_post_commit, revision_post_create, \
                             signal_send_off, signal_send_mask, signal_allow
 from repchan.decorators import disable_in_main_context, \
                                disable_in_revision_context, \
-                               disable_in_revision_new_context
+                               disable_in_revision_new_context, \
+                               enable_in_trash_context
 from repchan.exceptions import VersionException, VersionReadOnlyException, \
                                VersionCommitException
 
@@ -522,6 +523,15 @@ class VersionModel(models.Model):
                     models.signals.post_delete.send(
                         sender=model, instance=obj, using=using
                     )
+
+    @enable_in_trash_context
+    def revert_from_trash(self):
+        """
+        Restores previously deleted object.
+        """
+        self.version_in_trash = False
+        self.version_date = _get_current_date()
+        self._save()
 
     def _delete(self, using=None, *args, **kwargs):
         signal_send_off(self, models.signals.pre_delete)

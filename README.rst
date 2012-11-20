@@ -257,6 +257,12 @@ Truth table commands in context.
 | get_number_of_changes | returns the number of   | raise VersionDisabled\  | raise VersionDisabled\       |
 |                       | changes                 | MethodException         | MethodException              |
 +-----------------------+-------------------------+-------------------------+------------------------------+
+| revert_from_trash     | if object in trash      | raise VersionDisabled\  | raise VersionDisabled\       |
+|                       | revert                  | MethodException         | MethodException              |
+|                       | else                    |                         |                              |
+|                       | raise VersionDisabled\  |                         |                              |
+|                       | MethodException         |                         |                              |
++-----------------------+-------------------------+-------------------------+------------------------------+
 |                       |                         |                         |                              |
 +-----------------------+-------------------------+-------------------------+------------------------------+
 
