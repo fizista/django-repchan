@@ -315,6 +315,7 @@ class VersionModel(models.Model):
                               'self',
                               blank=True,
                               null=True,
+                              editable=False,
                               limit_choices_to={'version_parent_pk': None },
                               related_name='%(app_label)s_%(class)s_parentpk',
                               verbose_name=_(u'Visible parent object'))
@@ -323,6 +324,7 @@ class VersionModel(models.Model):
                               'self',
                               blank=True,
                               null=True,
+                              editable=False,
                               related_name='%(app_label)s_%(class)s_parentverpk',
                               verbose_name=_(u'Parent version object'))
 
@@ -348,18 +350,21 @@ class VersionModel(models.Model):
     version_unique_on = models.NullBooleanField(
                                blank=True,
                                default=False,
+                               editable=False,
                                verbose_name=_(u'Turn on the unique keys for revisions [True], '
                                                'turn on the unique keys for main [False], '
                                                'turn off the unique keys[None]'))
 
     version_in_trash = models.BooleanField(
                                        default=False,
+                                       editable=False,
                                        verbose_name=_(u'Is it in the trash'))
 
     # Each call to 'set_as_main_version' counter increases by one.
     # Method 'set_as_main_version' is also called when the call to 'save'.
     version_counter = models.IntegerField(
                                        default=0,
+                                       editable=False,
                                        verbose_name=_(u'Number of changes.'))
 
 
