@@ -1,4 +1,6 @@
 TODO:
+* QuerySet.delete collector
+* Disable delete context in QuerySet??
 * add function regenerate hashes
 * add function for remove orphaned revisions
 * add delete revisions
