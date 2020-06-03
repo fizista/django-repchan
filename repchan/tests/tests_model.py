@@ -21,13 +21,12 @@ from repchan.models import ValueStandard, \
                            NULL_DATE
 
 def gen_hash(hash_len=64, **kwargs):
-    if not type(hash_len) is int:
+    if type(hash_len) is not int:
         raise Exception('hash_len must be an integer')
     keys = kwargs.keys()
     keys.sort()
     data = '=='.join([str(kwargs[k]) for k in keys])
-    hash = hashlib.sha512(data).hexdigest()[:hash_len]
-    return hash
+    return hashlib.sha512(data).hexdigest()[:hash_len]
 
 
 def ipp_gen(start=1):

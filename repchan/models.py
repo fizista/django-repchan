@@ -452,8 +452,7 @@ class VersionModel(models.Model):
         '''
         Check if this is the main version.
         '''
-        return self.version_parent_pk == None and \
-                self.version_unique_on == False
+        return self.version_parent_pk is None and self.version_unique_on == False
 
     def check_is_revision(self):
         '''
@@ -466,8 +465,7 @@ class VersionModel(models.Model):
         '''
         Check if this is the revision new.
         '''
-        return self.version_parent_pk != None and \
-                self.version_unique_on == None
+        return self.version_parent_pk != None and self.version_unique_on is None
 
     def get_version_hash(self):
         '''
@@ -551,8 +549,7 @@ class VersionModel(models.Model):
     def _get_fieds_without_outside_changes(self):
         keys_original = self._get_fields_original_fields_names()
         keys_outside = self._get_fields_outside_changes().keys()
-        keys = list(set(keys_original) - set(keys_outside))
-        return keys
+        return list(set(keys_original) - set(keys_outside))
 
     def _get_fields_original_fields_names(self):
         return self.Versioning.original_fields_names
@@ -658,11 +655,14 @@ class VersionModel(models.Model):
         revision - Read/Write
         '''
         fields = self._get_fields_original_fields_names()
-        if (name in fields) and self.check_is_revision():
-            if not "django/db/" in inspect.stack()[1][1]:
-                raise VersionReadOnlyException('Varible "%s.%s" is read only' %
-                                               (self.__class__.__name__,
-                                                name,))
+        if (
+            (name in fields)
+            and self.check_is_revision()
+            and "django/db/" not in inspect.stack()[1][1]
+        ):
+            raise VersionReadOnlyException('Varible "%s.%s" is read only' %
+                                           (self.__class__.__name__,
+                                            name,))
         super(VersionModel, self).__setattr__(name, value)
 
     def __delattr__(self, name):
@@ -675,11 +675,14 @@ class VersionModel(models.Model):
         revision - Read/Write
         '''
         fields = self._get_fields_original_fields_names()
-        if (name in fields) and self.check_is_revision():
-            if not "django/db/" in inspect.stack()[1][1]:
-                raise VersionReadOnlyException('Varible "%s.%s" is read only' %
-                                               (self.__class__.__name__,
-                                                name,))
+        if (
+            (name in fields)
+            and self.check_is_revision()
+            and "django/db/" not in inspect.stack()[1][1]
+        ):
+            raise VersionReadOnlyException('Varible "%s.%s" is read only' %
+                                           (self.__class__.__name__,
+                                            name,))
         super(VersionModel, self).__delattr__(name)
 
     @disable_in_revision_new_context
@@ -699,14 +702,11 @@ class VersionModel(models.Model):
         if self.check_is_main_version():
             new_revision.version_parent_pk = self
             new_revision.version_parent_rev_pk = self.version_parent_rev_pk
-            new_revision.version_have_children = False
-            new_revision.version_date = None
         else:
             new_revision.version_parent_pk = self.version_parent_pk
             new_revision.version_parent_rev_pk = self
-            new_revision.version_have_children = False
-            new_revision.version_date = None
-
+        new_revision.version_have_children = False
+        new_revision.version_date = None
         # Revisions are always the default value
         new_revision.version_counter = 0
         # Turn off unique keys
@@ -769,10 +769,11 @@ class VersionModel(models.Model):
     @disable_in_revision_new_context
     def save(self, force_insert=False, force_update=False, using=None):
         # If no changes, then we drop writing.
-        if self.version_parent_rev_pk:
-            if self.get_version_hash() == self.version_parent_rev_pk.\
-                                                version_hash:
-                return
+        if (
+            self.version_parent_rev_pk
+            and self.get_version_hash() == self.version_parent_rev_pk.version_hash
+        ):
+            return
 
         # Permission to send a signal.
         signal_allow(self, models.signals.pre_save)

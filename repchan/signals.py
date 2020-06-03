@@ -34,8 +34,7 @@ def signal_send_status(instance, signal_object):
     True if the signal can be sent, otherwise false.
     '''
     try:
-        return not signal_id(instance, signal_object) in\
-                                    instance._signal_disable
+        return signal_id(instance, signal_object) not in instance._signal_disable
     except KeyError:
         return True
 
